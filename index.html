@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Ubuntu Command Cheat Sheet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .command-card { transition: all 0.2s ease-in-out; }
+        .command-card:hover { transform: translateY(-4px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .active-filter { background-color: #3B82F6; color: white; }
+        .copy-btn-feedback { background-color: #22C55E; }
+    </style>
+    <link rel="preconnect" href="https://rsms.me/">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    <!-- Chosen Palette: Soothing Neutrals -->
+    <!-- Application Structure Plan: The application maintains its single-view, dynamic dashboard structure. It now features an expanded set of commands covering nine key categories. The "Quick Tips" section remains for fundamental usage, followed by enhanced search and filtering. This structure is optimal for handling a larger data set, allowing users to quickly navigate the comprehensive guide via filters (e.g., jump to 'Text Editing') or the universal search bar. -->
+    <!-- Visualization & Content Choices: Data has been significantly expanded to cover 'A to Z' basics, including new categories (Text Editing, Searching & Filtering, Disk/Hardware). Goal: Organize, Inform, and Teach. Presentation: Responsive card grid. Interaction: Real-time search, multi-category filtering, and one-click copy. Justification: The interactive filtering and copy functions scale well with the increased command count, preventing the user from being overwhelmed by a static, massive list. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="container mx-auto px-4 py-8 md:py-12">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-2">🐧 Interactive Ubuntu Command Cheat Sheet</h1>
+            <p class="text-lg text-slate-600">A fast, searchable, and filterable guide to the Ubuntu terminal.</p>
+        </header>
+
+        <!-- New Quick Tips Section -->
+        <section id="quickTips" class="mb-10 p-6 bg-white rounded-xl shadow-lg border border-slate-200">
+            <h2 class="text-2xl font-semibold text-slate-900 mb-4 flex items-center">
+                <span class="mr-2">💡</span> Terminal Quick Tips
+            </h2>
+            <div id="tipsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Tips rendered here by JS -->
+            </div>
+        </section>
+        
+        <main>
+            <div class="sticky top-0 bg-slate-50/80 backdrop-blur-sm z-10 py-4 mb-8">
+                <div class="flex flex-col md:flex-row gap-4 mb-4">
+                    <input type="text" id="searchInput" placeholder="Search by command or description..." class="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                </div>
+                <div id="categoryFilters" class="flex flex-wrap justify-center gap-2">
+                </div>
+            </div>
+
+            <div id="commandList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const commands = [
+            // Filesystem (A-Z)
+            { category: 'Filesystem', command: 'pwd', description: 'Print Working Directory (show current directory path).' },
+            { category: 'Filesystem', command: 'ls', description: 'List directory contents. Use `ls -l` for long format, `ls -a` for all files (including hidden).' },
+            { category: 'Filesystem', command: 'cd directory_name', description: 'Change Directory to `directory_name`.' },
+            { category: 'Filesystem', command: 'cd ..', description: 'Move up one directory level.' },
+            { category: 'Filesystem', command: 'cd ~', description: 'Go to the home directory.' },
+            { category: 'Filesystem', command: 'mkdir new_folder', description: 'Make Directory named `new_folder`.' },
+            { category: 'Filesystem', command: 'rmdir empty_folder', description: 'Remove Directory (only works if empty).' },
+            { category: 'Filesystem', command: 'touch file.txt', description: 'Create an empty file.' },
+            { category: 'Filesystem', command: 'cp source destination', description: 'Copy a file or directory. Use `cp -r` for directories.' },
+            { category: 'Filesystem', command: 'mv old_name new_name', description: 'Move or Rename a file or directory.' },
+            { category: 'Filesystem', command: 'rm file.txt', description: 'Remove (delete) a file. Use `rm -r folder` to delete a folder and its contents.' },
+            { category: 'Filesystem', command: 'ln -s target link_name', description: 'Create a symbolic link (shortcut) to a file or directory.' },
+            
+            // Text Content Viewing/Editing
+            { category: 'Text Editing', command: 'cat file.txt', description: 'Concatenate and display the entire content of a file.' },
+            { category: 'Text Editing', command: 'less file.txt', description: 'View file content one page at a time (use Space to scroll, `q` to quit).' },
+            { category: 'Text Editing', command: 'head file.txt', description: 'Display the first 10 lines of a file.' },
+            { category: 'Text Editing', command: 'tail file.txt', description: 'Display the last 10 lines of a file. Use `tail -f` to follow file changes in real-time.' },
+            { category: 'Text Editing', command: 'nano file.txt', description: 'Open the Nano text editor to edit a file.' },
+            { category: 'Text Editing', command: 'vi file.txt', description: 'Open the Vi/Vim text editor to edit a file (advanced).' },
+            
+            // Package Management (APT)
+            { category: 'Package Management', command: 'sudo apt update', description: 'Resynchronize package index files from their sources (fetch latest package list).' },
+            { category: 'Package Management', command: 'sudo apt upgrade', description: 'Install the newest versions of all currently installed packages.' },
+            { category: 'Package Management', command: 'sudo apt install package_name', description: 'Install a new package.' },
+            { category: 'Package Management', command: 'sudo apt remove package_name', description: 'Remove a package (keeps config files).' },
+            { category: 'Package Management', command: 'sudo apt purge package_name', description: 'Remove a package and its configuration files.' },
+            { category: 'Package Management', command: 'sudo apt autoremove', description: 'Remove packages that were automatically installed to satisfy dependencies and are no longer needed.' },
+            { category: 'Package Management', command: 'apt search keyword', description: 'Search for a package by keyword.' },
+            { category: 'Package Management', command: 'apt show package_name', description: 'Display detailed information about a package.' },
+            
+            // User & Permissions
+            { category: 'User & Permissions', command: 'sudo command', description: 'Execute a command with superuser privileges (root).' },
+            { category: 'User & Permissions', command: 'whoami', description: 'Display the current username.' },
+            { category: 'User & Permissions', command: 'passwd', description: 'Change your user password.' },
+            { category: 'User & Permissions', command: 'chown user:group file', description: 'Change the owner and group of a file.' },
+            { category: 'User & Permissions', command: 'chmod 755 file', description: 'Change permissions of a file (e.g., `rwxr-xr-x`).' },
+            { category: 'User & Permissions', command: 'sudo su', description: 'Switch to the root user (super user).' },
+            { category: 'User & Permissions', command: 'adduser new_user', description: 'Create a new system user account.' },
+            { category: 'User & Permissions', command: 'usermod -aG group user', description: 'Add a user to a supplementary group.' },
+
+            // System & Process
+            { category: 'System & Process', command: 'clear', description: 'Clear the terminal screen.' },
+            { category: 'System & Process', command: 'date', description: 'Display the current date and time.' },
+            { category: 'System & Process', command: 'man command', description: 'Display the manual page for a command (use `q` to quit).' },
+            { category: 'System & Process', command: 'ps aux', description: 'Display currently running processes.' },
+            { category: 'System & Process', command: 'top', description: 'Display system usage and active processes in real-time.' },
+            { category: 'System & Process', command: 'htop', description: 'Interactive process viewer (often needs to be installed).' },
+            { category: 'System & Process', command: 'kill PID', description: 'Terminate a process using its Process ID (PID). Use `-9` for forceful kill.' },
+            { category: 'System & Process', command: 'killall process_name', description: 'Kill all instances of a running process by name.' },
+            { category: 'System & Process', command: 'history', description: 'Display the list of previously executed commands.' },
+            { category: 'System & Process', command: 'reboot', description: 'Restart the system.' },
+            { category: 'System & Process', command: 'shutdown now', description: 'Shut down the system immediately.' },
+
+            // Searching & Filtering
+            { category: 'Searching & Filtering', command: 'grep pattern file.txt', description: 'Search for lines matching a pattern within a file.' },
+            { category: 'Searching & Filtering', command: 'find /path -name "file.txt"', description: 'Search for files in a directory hierarchy.' },
+            { category: 'Searching & Filtering', command: 'whereis command_name', description: 'Locate the binary, source, and manual page files for a command.' },
+            { category: 'Searching & Filtering', command: 'which command_name', description: 'Locate the executable binary of a command in the user\'s path.' },
+            { category: 'Searching & Filtering', command: 'sort file.txt', description: 'Sort lines of text files.' },
+            { category: 'Searching & Filtering', command: 'uniq file.txt', description: 'Report or omit repeated lines (often used after `sort`).' },
+
+            // Networking
+            { category: 'Networking', command: 'ip a', description: 'Display network interfaces and IP addresses (modern replacement for `ifconfig`).' },
+            { category: 'Networking', command: 'ping hostname_or_ip', description: 'Send ICMP ECHO_REQUEST to network hosts.' },
+            { category: 'Networking', command: 'ssh user@host', description: 'Secure Shell: Connect to a remote server.' },
+            { category: 'Networking', command: 'scp local_file user@host:path', description: 'Secure Copy: Copy files over SSH.' },
+            { category: 'Networking', command: 'curl URL', description: 'Transfer data from or to a server (for downloading or checking APIs).' },
+            { category: 'Networking', command: 'wget URL', description: 'Non-interactive network downloader.' },
+            { category: 'Networking', command: 'netstat -tuln', description: 'List all open ports (TCP/UDP, listening, numeric).' },
+            { category: 'Networking', command: 'traceroute host', description: 'Trace the path a packet takes to a network host.' },
+            { category: 'Networking', command: 'host domain.com', description: 'Perform DNS lookups.' },
+
+            // Disk/Hardware
+            { category: 'Disk/Hardware', command: 'df -h', description: 'Display disk space usage in human-readable format.' },
+            { category: 'Disk/Hardware', command: 'du -sh folder', description: 'Display the disk usage of a specific folder.' },
+            { category: 'Disk/Hardware', command: 'mount /dev/sdb1 /mnt/usb', description: 'Mount a filesystem (e.g., USB drive).' },
+            { category: 'Disk/Hardware', command: 'umount /mnt/usb', description: 'Unmount a mounted filesystem.' },
+            { category: 'Disk/Hardware', command: 'fdisk -l', description: 'Display disk partition tables.' },
+            { category: 'Disk/Hardware', command: 'free -h', description: 'Display amount of free and used memory in the system.' },
+
+            // Archive & Compression
+            { category: 'Archive & Compression', command: 'tar -cvzf archive.tar.gz folder/', description: 'Create a compressed archive (`-z` for gzip).' },
+            { category: 'Archive & Compression', command: 'tar -xvzf archive.tar.gz', description: 'Extract an archive (`-z` for gzip).' },
+            { category: 'Archive & Compression', command: 'gzip file.txt', description: 'Compress a file (original is replaced by `.gz`).' },
+            { category: 'Archive & Compression', command: 'gunzip file.txt.gz', description: 'Decompress a `.gz` file.' }
+        ];
+        
+        const quickTips = [
+            { icon: '➡️', title: 'Tab Completion', detail: 'Press the Tab key once or twice to auto-complete commands, file names, or directory names.' },
+            { icon: '⬆️', title: 'History Cycle', detail: 'Press the Up Arrow key to cycle through previously executed commands.' },
+            { icon: '♻️', title: 'Rerun Last Command', detail: 'Use `!!` to execute the last command again.' },
+            { icon: '|', title: 'Piping Output', detail: 'Use the pipe symbol (`|`) to direct the output of one command as the input to another (e.g., `ls -l | less`).' },
+            { icon: '>', title: 'Redirect Output', detail: 'Use `>` to send output to a file (overwriting it) or `>>` to append to a file.' }
+        ];
+
+
+        const commandList = document.getElementById('commandList');
+        const searchInput = document.getElementById('searchInput');
+        const categoryFilters = document.getElementById('categoryFilters');
+
+        let activeCategory = 'All';
+
+        const categoryColors = {
+            'Filesystem': 'bg-blue-100 text-blue-800',
+            'Package Management': 'bg-green-100 text-green-800',
+            'User & Permissions': 'bg-yellow-100 text-yellow-800',
+            'System & Process': 'bg-purple-100 text-purple-800',
+            'Networking': 'bg-red-100 text-red-800',
+            'Archive & Compression': 'bg-indigo-100 text-indigo-800',
+            'Text Editing': 'bg-orange-100 text-orange-800', // New
+            'Searching & Filtering': 'bg-teal-100 text-teal-800', // New
+            'Disk/Hardware': 'bg-pink-100 text-pink-800' // New
+        };
+
+        function renderTips() {
+            const tipsGrid = document.getElementById('tipsGrid');
+            tipsGrid.innerHTML = '';
+            quickTips.forEach(tip => {
+                const tipElement = document.createElement('div');
+                tipElement.className = 'p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-start space-x-3 transition hover:bg-slate-100';
+                tipElement.innerHTML = `
+                    <div class="text-xl pt-1">${tip.icon}</div>
+                    <div>
+                        <h3 class="font-semibold text-slate-900">${tip.title}</h3>
+                        <p class="text-xs text-slate-600">${tip.detail}</p>
+                    </div>
+                `;
+                tipsGrid.appendChild(tipElement);
+            });
+        }
+
+        function renderCommands() {
+            const searchTerm = searchInput.value.toLowerCase();
+            commandList.innerHTML = '';
+            
+            const filteredCommands = commands.filter(cmd => {
+                const inCategory = activeCategory === 'All' || cmd.category === activeCategory;
+                const inSearch = cmd.command.toLowerCase().includes(searchTerm) || cmd.description.toLowerCase().includes(searchTerm);
+                return inCategory && inSearch;
+            });
+            
+            if (filteredCommands.length === 0) {
+                 commandList.innerHTML = `<p class="text-slate-500 text-center col-span-full">No commands found. Try adjusting your search or filter.</p>`;
+                 return;
+            }
+
+            filteredCommands.forEach(cmd => {
+                const card = document.createElement('div');
+                card.className = 'command-card bg-white p-5 rounded-lg shadow-sm border border-slate-200 flex flex-col justify-between';
+                
+                const categoryColor = categoryColors[cmd.category] || 'bg-slate-100 text-slate-800';
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                             <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full ${categoryColor}">${cmd.category}</span>
+                        </div>
+                        <code class="text-lg font-bold text-slate-900 bg-slate-100 p-2 rounded-md block break-words">${cmd.command}</code>
+                        <p class="text-slate-600 mt-3 text-sm">${cmd.description}</p>
+                    </div>
+                    <button class="copy-btn mt-4 text-sm text-blue-600 font-semibold py-2 px-4 rounded-lg bg-blue-50 hover:bg-blue-100 self-start transition-colors duration-200">
+                        Copy Command
+                    </button>
+                `;
+                commandList.appendChild(card);
+            });
+        }
+        
+        function setupCategories() {
+            const categories = ['All', ...new Set(commands.map(cmd => cmd.category))];
+            categoryFilters.innerHTML = categories.map(cat => 
+                `<button class="filter-btn px-4 py-2 text-sm font-semibold rounded-full transition ${cat === 'All' ? 'active-filter' : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200 shadow-sm'}" data-category="${cat}">${cat}</button>`
+            ).join('');
+        }
+        
+        categoryFilters.addEventListener('click', e => {
+            if (e.target.classList.contains('filter-btn')) {
+                activeCategory = e.target.dataset.category;
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('active-filter');
+                    btn.classList.add('bg-white', 'text-slate-700', 'hover:bg-slate-200');
+                });
+                e.target.classList.add('active-filter');
+                e.target.classList.remove('bg-white', 'text-slate-700', 'hover:bg-slate-200');
+                renderCommands();
+            }
+        });
+
+        commandList.addEventListener('click', e => {
+            if (e.target.classList.contains('copy-btn')) {
+                const card = e.target.closest('.command-card');
+                const commandText = card.querySelector('code').innerText;
+                
+                try {
+                    const tempTextArea = document.createElement('textarea');
+                    tempTextArea.value = commandText;
+                    document.body.appendChild(tempTextArea);
+                    tempTextArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tempTextArea);
+
+                    const originalText = e.target.innerText;
+                    e.target.innerText = 'Copied!';
+                    e.target.classList.add('copy-btn-feedback');
+
+                    setTimeout(() => {
+                        e.target.innerText = originalText;
+                        e.target.classList.remove('copy-btn-feedback');
+                    }, 1500);
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                }
+            }
+        });
+
+        searchInput.addEventListener('keyup', renderCommands);
+
+        renderTips(); // Renders the new tips section
+        setupCategories();
+        renderCommands();
+
+    </script>
+</body>
+</html>
